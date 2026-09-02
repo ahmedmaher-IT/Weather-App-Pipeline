@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Weather App - Login</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('media/day1.jpg') no-repeat center center/cover;
+    }
+
+    .auth-card {
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 16px;
+      padding: 40px 30px;
+      width: 100%;
+      max-width: 400px;
+      color: #fff;
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+      text-align: center;
+    }
+
+    .auth-card h2 {
+      margin-bottom: 25px;
+      font-weight: 600;
+      letter-spacing: 1px;
+    }
+
+    .input-group {
+      margin-bottom: 20px;
+      text-align: left;
+    }
+
+    .input-group input {
+      width: 100%;
+      padding: 12px 15px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      background: rgba(255, 255, 255, 0.2);
+      color: #fff;
+      font-size: 14px;
+      outline: none;
+      transition: 0.3s;
+    }
+
+    .input-group input::placeholder {
+      color: #ddd;
+    }
+
+    .input-group input:focus {
+      border-color: #00d2ff;
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    .btn-submit {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      background: #00d2ff;
+      color: #fff;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.3s;
+      margin-top: 10px;
+    }
+
+    .btn-submit:hover {
+      background: #0080ff;
+    }
+
+    .toggle-text {
+      margin-top: 20px;
+      font-size: 13px;
+    }
+
+    .toggle-text a {
+      color: #00d2ff;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    .toggle-text a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="auth-card">
+    <!-- Form تسجيل الدخول -->
+    <div id="login-box">
+      <h2>Weather App Login</h2>
+      <div class="input-group">
+        <input type="text" id="loginUsername" placeholder="Username" required>
+      </div>
+      <div class="input-group">
+        <input type="password" id="loginPassword" placeholder="Password" required>
+      </div>
+      <button class="btn-submit" id="btnLogin">Login</button>
+      <div class="toggle-text">
+        Don't have an account? <a href="#" id="toRegister">Register here</a>
+      </div>
+    </div>
+
+    <!-- Form إنشاء حساب جديد -->
+    <div id="register-box" style="display: none;">
+      <h2>Create Account</h2>
+      <div class="input-group">
+        <input type="text" id="regUsername" placeholder="Username" required>
+      </div>
+      <div class="input-group">
+        <input type="email" id="regEmail" placeholder="Email" required>
+      </div>
+      <div class="input-group">
+        <input type="password" id="regPassword" placeholder="Password" required>
+      </div>
+      <div class="input-group">
+        <input type="text" id="regCity" placeholder="Default City (e.g. Cairo)">
+      </div>
+      <button class="btn-submit" id="btnRegister">Register</button>
+      <div class="toggle-text">
+        Already have an account? <a href="#" id="toLogin">Login here</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const BACKEND_URL = "http://localhost:5000";
+
+    // خلفية عشوائية من مجلد media
+    const backgrounds = ["day1.jpg", "day2.jpg", "day3.jpg", "cloudy1.jpg", "cloudy2.jpg"];
+    const randomBg = backgrounds[Math.floor(Math.random() * backgrounds.length)];
+    document.body.style.backgroundImage = `linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('media/${randomBg}')`;
+
+    // التنقل بين الـ Login والـ Register
+    document.getElementById("toRegister").addEventListener("click", (e) => {
+      e.preventDefault();
+      document.getElementById("login-box").style.display = "none";
+      document.getElementById("register-box").style.display = "block";
+    });
+
+    document.getElementById("toLogin").addEventListener("click", (e) => {
+      e.preventDefault();
+      document.getElementById("register-box").style.display = "none";
+      document.getElementById("login-box").style.display = "block";
+    });
+
+    // 1. تسجيل الدخول والتحويل الفوري لصفحة الطقس
+    document.getElementById("btnLogin").addEventListener("click", async () => {
+      const username = document.getElementById("loginUsername").value.trim();
+      const password = document.getElementById("loginPassword").value.trim();
+
+      if (!username || !password) {
+        alert("Please enter username and password!");
+        return;
+      }
+
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+
+        const data = await res.json();
+
+        if (res.ok && data.token) {
+          localStorage.setItem('token', data.token);
+          const city = (data.user && data.user.city) ? data.user.city : 'Cairo';
+          localStorage.setItem('userCity', city);
+
+          // دخول مباشر لصفحة الطقس
+          window.location.href = "index.html";
+        } else {
+          alert(data.message || "Invalid credentials!");
+        }
+      } catch (err) {
+        console.error(err);
+        alert("Backend server is not running!");
+      }
+    });
+
+    // 2. إنشاء حساب والتوجيه المباشر أوتوماتيكياً للطقس
+    document.getElementById("btnRegister").addEventListener("click", async () => {
+      const username = document.getElementById("regUsername").value.trim();
+      const email = document.getElementById("regEmail").value.trim();
+      const password = document.getElementById("regPassword").value.trim();
+      const city = document.getElementById("regCity").value.trim() || 'Cairo';
+
+      if (!username || !email || !password) {
+        alert("Please fill in all fields!");
+        return;
+      }
+
+      try {
+        // تسجيل الحساب
+        const regRes = await fetch(`${BACKEND_URL}/api/auth/register`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, email, password, city })
+        });
+
+        const regData = await regRes.json();
+
+        if (regRes.ok) {
+          // تسجيل دخول تلقائي فوراً لدخول صفحة الطقس مباشرة
+          const loginRes = await fetch(`${BACKEND_URL}/api/auth/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+          });
+
+          const loginData = await loginRes.json();
+
+          if (loginRes.ok && loginData.token) {
+            localStorage.setItem('token', loginData.token);
+            localStorage.setItem('userCity', city);
+
+            // دخول مباشر لصفحة الطقس
+            window.location.href = "index.html";
+          } else {
+            document.getElementById("toLogin").click();
+          }
+        } else {
+          alert(regData.message || "Registration failed!");
+        }
+      } catch (err) {
+        console.error(err);
+        alert("Backend server is not running!");
+      }
+    });
+  </script>
+</body>
+</html>

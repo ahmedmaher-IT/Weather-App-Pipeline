@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Weather App - Dashboard</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('media/day1.jpg') no-repeat center center/cover;
+      color: #fff;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 30px;
+      background: rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(5px);
+    }
+
+    .weather-card {
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 16px;
+      padding: 30px;
+      max-width: 500px;
+      margin: 40px auto;
+      text-align: center;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+
+    .search-box {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .search-box input {
+      flex: 1;
+      padding: 10px 15px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      background: rgba(255, 255, 255, 0.2);
+      color: #fff;
+      outline: none;
+    }
+
+    .search-box input::placeholder {
+      color: #ccc;
+    }
+
+    .search-box button, #logoutBtn {
+      padding: 10px 15px;
+      border-radius: 8px;
+      border: none;
+      background: #00d2ff;
+      color: #fff;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    #logoutBtn {
+      background: #ff4d4d;
+    }
+
+    .search-box button:hover {
+      background: #0080ff;
+    }
+
+    /* إصلاح حجم صورة الأيقونة الضخمة */
+    .temperature-icon img {
+      width: 100px;
+      height: 100px;
+      object-fit: contain;
+    }
+
+    .temperature-icon {
+      margin: 10px 0;
+    }
+
+    h1#temperatureValue {
+      font-size: 48px;
+      margin: 10px 0;
+    }
+
+    .details-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      text-align: left;
+      font-size: 14px;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h2>Weather Dashboard</h2>
+    <button id="logoutBtn">Logout</button>
+  </header>
+
+  <div class="weather-card">
+    <div class="search-box">
+      <input type="text" id="searchCity" placeholder="Enter city name...">
+      <button id="searchBtn">Search</button>
+    </div>
+
+    <div class="weather-info">
+      <div class="temperature-icon">
+  <img src="media/sunny.png" alt="weather" id="weatherIcon" style="width: 80px; height: 80px; object-fit: contain;">
+      </div>
+      <h1 id="temperatureValue">--<sup>°C</sup></h1>
+      <h2 id="locationName">Loading...</h2>
+      <p id="weatherType">--</p>
+    </div>
+
+    <hr style="margin: 20px 0; border: 0.5px solid rgba(255,255,255,0.2);">
+
+    <div class="details-grid">
+      <div>Humidity: <span id="humidityValue">-</span>%</div>
+      <div>Wind Speed: <span id="windSpeedValue">-</span> m/s</div>
+      <div>Pressure: <span id="pressureValue">-</span> hPa</div>
+      <div>Real Feel: <span id="feelsLikeValue">-</span><sup>°C</sup></div>
+    </div>
+  </div>
+
+  <script src="scripts/script.js"></script>
+</body>
+</html>

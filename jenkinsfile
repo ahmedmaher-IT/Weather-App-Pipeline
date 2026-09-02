@@ -1,0 +1,74 @@
+pipeline {
+    agent any
+
+    environment {
+        DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials-id')
+        IMAGE_NAME = 'ahmedmaherit/weather-backend' // ضع اسم حسابك وحاوية Backend
+        IMAGE_TAG = "${BUILD_NUMBER}"
+    }
+
+    stages {
+        stage('Checkout Code') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Install Dependencies & Run Tests') {
+            steps {
+                dir('BACK') {
+                    // إنشاء مجلد الـ logs محلياً لو لم يكن موجوداً
+                    sh 'mkdir -p logs'
+                    // تثبيت المكتبات الجديدة
+                    sh 'npm install'
+                    // تشغيل الـ Unit Tests
+                    sh 'npm test'
+                }
+            }
+        }
+
+        stage('Security Scan (Trivy)') {
+            steps {
+                // فحص الثغرات الأمنية في الكود والمكتبات
+                sh 'trivy fs --severity HIGH,CRITICAL .'
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                dir('BACK') {
+                    sh "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ."
+                    sh "docker build -t ${IMAGE_NAME}:latest ."
+                }
+            }
+        }
+
+        stage('Push Image to Docker Hub') {
+            steps {
+                sh "echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin"
+                sh "docker push ${IMAGE_NAME}:${IMAGE_TAG}"
+                sh "docker push ${IMAGE_NAME}:latest"
+            }
+        }
+
+        stage('Deploy (Docker Compose)') {
+            steps {
+                // إعادة تشغيل النظام بالنسخة والتأكد من وجود مجلد الـ logs
+                sh 'docker-compose down'
+                sh 'docker-compose up -d --build'
+            }
+        }
+    }
+
+    post {
+        always {
+            sh 'docker logout'
+        }
+        success {
+            echo 'Pipeline completed successfully with Log rotation feature!'
+        }
+        failure {
+            echo 'Pipeline failed! Check console output.'
+        }
+    }
+}

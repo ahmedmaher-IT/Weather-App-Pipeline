@@ -1,0 +1,23 @@
+
+services:
+  backend:
+    build: ./BACK
+    ports:
+      - "5000:5000"
+    environment:
+      - WEATHER_API_KEY=cd1866915e01aad27530448a08c3947b
+      - PORT=5000
+
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
