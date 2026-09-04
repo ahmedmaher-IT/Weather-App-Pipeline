@@ -1,38 +1,40 @@
 const BACKEND_URL = "http://localhost:5000";
 
 document.addEventListener("DOMContentLoaded", () => {
-  const token = localStorage.getItem("token");
   const defaultCity = localStorage.getItem("userCity") || "Cairo";
-
-  // لو مفيش توكن يرجعه لصفحة اللوجن
-  if (!token) {
-    window.location.href = "login.html";
-    return;
-  }
 
   // جلب طقس المدينة الافتراضية فور فتح الصفحة
   fetchWeather(defaultCity);
 
   // زر البحث
-  document.getElementById("searchBtn").addEventListener("click", () => {
-    const city = document.getElementById("searchCity").value.trim();
-    if (city) fetchWeather(city);
-  });
+  const searchBtn = document.getElementById("searchBtn");
+  if (searchBtn) {
+    searchBtn.addEventListener("click", () => {
+      const cityInput = document.getElementById("searchCity");
+      if (cityInput && cityInput.value.trim()) {
+        fetchWeather(cityInput.value.trim());
+      }
+    });
+  }
 
   // Enter Key للبحث
-  document.getElementById("searchCity").addEventListener("keypress", (e) => {
-    if (e.key === "Enter") {
-      const city = document.getElementById("searchCity").value.trim();
-      if (city) fetchWeather(city);
-    }
-  });
+  const searchCityInput = document.getElementById("searchCity");
+  if (searchCityInput) {
+    searchCityInput.addEventListener("keypress", (e) => {
+      if (e.key === "Enter" && searchCityInput.value.trim()) {
+        fetchWeather(searchCityInput.value.trim());
+      }
+    });
+  }
 
   // تسجيل الخروج
-  document.getElementById("logoutBtn").addEventListener("click", () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("userCity");
-    window.location.href = "login.html";
-  });
+  const logoutBtn = document.getElementById("logoutBtn");
+  if (logoutBtn) {
+    logoutBtn.addEventListener("click", () => {
+      localStorage.clear();
+      window.location.href = "login.html";
+    });
+  }
 });
 
 async function fetchWeather(city) {
@@ -42,51 +44,68 @@ async function fetchWeather(city) {
     const res = await fetch(`${BACKEND_URL}/api/weather?city=${encodeURIComponent(city)}`, {
       method: "GET",
       headers: {
-        "Authorization": `Bearer ${token}`
+        "Content-Type": "application/json",
+        "Authorization": token ? `Bearer ${token}` : ""
       }
     });
-
-    if (res.status === 401 || res.status === 403) {
-      alert("Session expired, please login again.");
-      localStorage.clear();
-      window.location.href = "login.html";
-      return;
-    }
 
     const data = await res.json();
 
     if (res.ok) {
       updateUI(data);
     } else {
-      alert(data.message || "City not found!");
+      alert(data.message || data.error || "City not found!");
     }
   } catch (err) {
-    console.error(err);
-    alert("Error connecting to weather backend!");
+    console.error("Fetch Error:", err);
+    alert("Error connecting to weather backend server!");
   }
 }
 
 function updateUI(data) {
-  document.getElementById("locationName").textContent = `${data.name}, ${data.sys.country}`;
-  document.getElementById("temperatureValue").innerHTML = `${Math.round(data.main.temp)}<sup>°C</sup>`;
-  document.getElementById("weatherType").textContent = data.weather[0].description;
-  document.getElementById("humidityValue").textContent = data.main.humidity;
-  document.getElementById("windSpeedValue").textContent = data.wind.speed;
-  document.getElementById("pressureValue").textContent = data.main.pressure;
-  document.getElementById("feelsLikeValue").innerHTML = Math.round(data.main.feels_like);
+  const locElem = document.getElementById("locationName");
+  if (locElem && data.name && data.sys) {
+    locElem.textContent = `${data.name}, ${data.sys.country}`;
+  }
 
-  // تحديث رابط الأيقونة بشكل آمن مع إجبار العرض
+  const tempElem = document.getElementById("temperatureValue");
+  if (tempElem && data.main) {
+    tempElem.innerHTML = `${Math.round(data.main.temp)}<sup>°C</sup>`;
+  }
+
+  const typeElem = document.getElementById("weatherType");
+  if (typeElem && data.weather && data.weather[0]) {
+    typeElem.textContent = data.weather[0].description;
+  }
+
+  const humElem = document.getElementById("humidityValue");
+  if (humElem && data.main) {
+    humElem.textContent = data.main.humidity;
+  }
+
+  const windElem = document.getElementById("windSpeedValue");
+  if (windElem && data.wind) {
+    windElem.textContent = data.wind.speed;
+  }
+
+  const pressElem = document.getElementById("pressureValue");
+  if (pressElem && data.main) {
+    pressElem.textContent = data.main.pressure;
+  }
+
+  const feelsElem = document.getElementById("feelsLikeValue");
+  if (feelsElem && data.main) {
+    feelsElem.innerHTML = Math.round(data.main.feels_like);
+  }
+
   const iconImg = document.getElementById("weatherIcon");
-  if (iconImg) {
+  if (iconImg && data.weather && data.weather[0]) {
     const iconCode = data.weather[0].icon;
-    
-    // استخدام رابط OpenWeather عبر HTTPS
     iconImg.src = `https://openweathermap.org/img/wn/${iconCode}@2x.png`;
-    iconImg.style.display = "inline-block"; // إظهار الصورة فور التحميل
+    iconImg.style.display = "inline-block";
 
-    // في حالة عدم توفر الإنترنت أو فشل الرابط، يتم استخدام أيقونة افتراضية
     iconImg.onerror = () => {
-      iconImg.src = "https://cdn-icons-png.flaticon.com/512/869/869869.png"; // رابط أيقونة شمس احتياطي مباشر
+      iconImg.src = "https://cdn-icons-png.flaticon.com/512/869/869869.png";
     };
   }
 }
